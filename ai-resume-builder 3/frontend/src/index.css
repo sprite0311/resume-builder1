@@ -1,0 +1,9 @@
+
+@layer theme, custom-base, custom-components, custom-utilities;
+@import "tailwindcss/theme" layer(theme);
+@import "tailwindcss/preflight" layer(custom-base);
+@import "tailwindcss/utilities" layer(custom-utilities);
+
+
+html, body, #root { height: 100%; }
+body { @apply bg-white text-gray-900; }
