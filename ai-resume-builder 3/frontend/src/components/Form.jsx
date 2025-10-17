@@ -1,5 +1,140 @@
 import React, { useState } from 'react'
 
+function ExperienceModal({ isOpen, onClose, experiences, onUpdateExperiences }) {
+  const [currentExperience, setCurrentExperience] = useState({
+    company: '',
+    role: '',
+    startDate: '',
+    endDate: '',
+    description: ''
+  })
+
+  const handleAddExperience = () => {
+    if (currentExperience.company && currentExperience.role) {
+      onUpdateExperiences([...experiences, currentExperience])
+      setCurrentExperience({
+        company: '',
+        role: '',
+        startDate: '',
+        endDate: '',
+        description: ''
+      })
+    }
+  }
+
+  const handleRemoveExperience = (index) => {
+    const updatedExperiences = experiences.filter((_, i) => i !== index)
+    onUpdateExperiences(updatedExperiences)
+  }
+
+  const handleChange = (e) => {
+    setCurrentExperience({ ...currentExperience, [e.target.name]: e.target.value })
+  }
+
+  if (!isOpen) return null
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-gradient-to-br from-[rgba(11,17,32,0.9)] to-[rgba(15,23,42,0.9)] p-6 rounded-xl border border-white/20 text-white max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto">
+        <h3 className="text-xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">Work Experience</h3>
+
+        <div className="space-y-4 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1">Company</label>
+              <input
+                name="company"
+                value={currentExperience.company}
+                onChange={handleChange}
+                placeholder="Company Name"
+                className="w-full p-3 border border-white/20 rounded-lg bg-white/10 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1">Role</label>
+              <input
+                name="role"
+                value={currentExperience.role}
+                onChange={handleChange}
+                placeholder="Job Title"
+                className="w-full p-3 border border-white/20 rounded-lg bg-white/10 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1">Start Date</label>
+              <input
+                name="startDate"
+                type="month"
+                value={currentExperience.startDate}
+                onChange={handleChange}
+                className="w-full p-3 border border-white/20 rounded-lg bg-white/10 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1">End Date</label>
+              <input
+                name="endDate"
+                type="month"
+                value={currentExperience.endDate}
+                onChange={handleChange}
+                className="w-full p-3 border border-white/20 rounded-lg bg-white/10 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-1">Description</label>
+            <textarea
+              name="description"
+              value={currentExperience.description}
+              onChange={handleChange}
+              placeholder="Describe your responsibilities and achievements"
+              className="w-full p-3 border border-white/20 rounded-lg bg-white/10 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 h-24 resize-none"
+            />
+          </div>
+          <button
+            onClick={handleAddExperience}
+            className="w-full px-4 py-2 bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white font-semibold rounded-lg transition-all"
+          >
+            Add Experience
+          </button>
+        </div>
+
+        <div className="space-y-2">
+          <h4 className="text-lg font-semibold">Added Experiences:</h4>
+          {experiences.map((exp, index) => (
+            <div key={index} className="p-3 border border-white/20 rounded-lg bg-white/5">
+              <div className="flex justify-between items-start">
+                <div>
+                  <h5 className="font-semibold">{exp.role} at {exp.company}</h5>
+                  <p className="text-sm text-gray-400">{exp.startDate} - {exp.endDate}</p>
+                  <p className="text-sm mt-1">{exp.description}</p>
+                </div>
+                <button
+                  onClick={() => handleRemoveExperience(index)}
+                  className="text-red-400 hover:text-red-300 ml-2"
+                >
+                  Remove
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="flex justify-end mt-6">
+          <button
+            onClick={onClose}
+            className="px-6 py-2 bg-gray-600 hover:bg-gray-700 text-white font-semibold rounded-lg transition-all"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function Form({ onGenerate, loading }) {
   const [form, setForm] = useState({
     name: '',
@@ -8,17 +143,32 @@ export default function Form({ onGenerate, loading }) {
     phone: '',
     summary: '',
     education: '',
-    experience: '',
+    experience: [],
     skills: '',
   })
+
+  const [isModalOpen, setIsModalOpen] = useState(false)
 
   function handleChange(e) {
     setForm({ ...form, [e.target.name]: e.target.value })
   }
 
+  function handleUpdateExperiences(newExperiences) {
+    setForm({ ...form, experience: newExperiences })
+  }
+
   function handleSubmit(e) {
     e.preventDefault()
-    onGenerate(form)
+    // Format experience data for backend compatibility
+    const formattedForm = {
+      ...form,
+      experience: form.experience.length > 0
+        ? form.experience.map(exp =>
+            `${exp.role} at ${exp.company} (${exp.startDate} - ${exp.endDate}): ${exp.description}`
+          ).join('\n\n')
+        : ''
+    }
+    onGenerate(formattedForm)
   }
 
   return (
@@ -53,7 +203,13 @@ export default function Form({ onGenerate, loading }) {
         </div>
         <div className="space-y-2">
           <label className="block text-sm font-medium text-gray-300">Work Experience</label>
-          <textarea name="experience" value={form.experience} onChange={handleChange} placeholder="Describe your work experience (company - role - key achievements)" className="w-full p-3 border border-white/20 rounded-lg bg-white/10 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all h-36 resize-none" />
+          <button
+            type="button"
+            onClick={() => setIsModalOpen(true)}
+            className="w-full p-3 border border-white/20 rounded-lg bg-white/10 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-left"
+          >
+            {form.experience.length > 0 ? `${form.experience.length} experience(s) added` : 'Click to add work experience'}
+          </button>
         </div>
         <div className="space-y-2">
           <label className="block text-sm font-medium text-gray-300">Skills</label>
@@ -72,6 +228,13 @@ export default function Form({ onGenerate, loading }) {
           ) : 'Generate Resume'}
         </button>
       </div>
+
+      <ExperienceModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        experiences={form.experience}
+        onUpdateExperiences={handleUpdateExperiences}
+      />
     </form>
   )
 }
